@@ -182,8 +182,8 @@ public class TimeTrackerFrame extends JFrame {
 
             // Set default colors with correct transparency
             fontColor = Color.BLACK;
-            progressBarColor = new Color(0, 100, 0, 128);
-            timelineColor = new Color(0, 0, 139, 128);
+            progressBarColor = new Color(18, 97, 150, 170);
+            timelineColor = new Color(140, 0, 0, 255);
             currentTimeColor = new Color(255, 0, 0, 255);
 
             startOfDay = LocalTime.of(6, 0);
