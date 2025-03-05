@@ -168,7 +168,7 @@ public class ProgressBar extends JPanel {
             String label = block.label;
             int maxTextWidth = blockWidth - 10;
             if (g.getFontMetrics().stringWidth(label) > maxTextWidth) {
-                while (g.getFontMetrics().stringWidth(label + "...") > maxTextWidth && label.length() > 0) {
+                while (g.getFontMetrics().stringWidth(label + "...") > maxTextWidth && !label.isEmpty()) {
                     label = label.substring(0, label.length() - 1);
                 }
                 label += "...";
@@ -216,7 +216,7 @@ public class ProgressBar extends JPanel {
 
             // Draw highlight behind text
             String fullLabel = hoveredBlock.label;
-            int textWidth = 0 + g.getFontMetrics().stringWidth(fullLabel);
+            int textWidth = g.getFontMetrics().stringWidth(fullLabel);
             int textHeight = g.getFontMetrics().getHeight();
             Color highlight = new Color(20, 20, 20, 255);
             g.setColor(highlight);
@@ -238,20 +238,42 @@ public class ProgressBar extends JPanel {
         String[] words = text.split(" ");
 
         for (String word : words) {
-            String testLine = currentLine.length() == 0 ? word : currentLine + " " + word;
+            String testLine = currentLine.isEmpty() ? word : currentLine + " " + word;
             if (g.getFontMetrics().stringWidth(testLine) > maxWidth) {
                 lines.add(currentLine.toString());
                 currentLine = new StringBuilder(word);
             } else {
-                currentLine.append(currentLine.length() == 0 ? "" : " ").append(word);
+                currentLine.append(currentLine.isEmpty() ? "" : " ").append(word);
             }
         }
-        if (currentLine.length() > 0) {
+        if (!currentLine.isEmpty()) {
             lines.add(currentLine.toString());
         }
         return lines;
     }
 
+    // Used for determining the current time block
+    protected TimeBlock getCurrentTimeBlock() {
+        LocalTime now = LocalTime.now();
+        for (TimeBlock block : timeBlocks) {
+            if (!now.isBefore(block.start) && now.isBefore(block.end)) {
+                return block; // The current time is within this block
+            }
+        }
+        return null; // No active time block
+    }
+
+    protected String getTimeRemaining(TimeBlock block) {
+        if (block == null) return "No active block";
+
+        LocalTime now = LocalTime.now();
+        long minutesRemaining = ChronoUnit.MINUTES.between(now, block.end);
+
+        long hours = minutesRemaining / 60;
+        long minutes = minutesRemaining % 60;
+
+        return (hours > 0) ? String.format("%d hr %d min left", hours, minutes) : String.format("%d min left", minutes);
+    }
 
 
     public void updateSettings(Color fontColor, Color progressFillColor, Color timelineColor,
