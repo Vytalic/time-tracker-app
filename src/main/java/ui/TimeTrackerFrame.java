@@ -162,9 +162,9 @@ public class TimeTrackerFrame extends JFrame {
             properties.load(input);
 
             fontColor = new Color(Integer.parseInt(properties.getProperty("fontColor", String.valueOf(Color.BLACK.getRGB()))), true);
-            progressBarColor = new Color(Integer.parseInt(properties.getProperty("progressBarColor", String.valueOf(new Color(0, 100, 0, 128).getRGB()))), true);
-            timelineColor = new Color(Integer.parseInt(properties.getProperty("timelineColor", String.valueOf(new Color(0, 0, 139).getRGB()))), true);
-            currentTimeColor = new Color(Integer.parseInt(properties.getProperty("currentTimeColor", String.valueOf(Color.RED.getRGB()))), true);
+            progressBarColor = new Color(Integer.parseInt(properties.getProperty("progressBarColor", String.valueOf(new Color(18, 97, 150, 170).getRGB()))), true);
+            timelineColor = new Color(Integer.parseInt(properties.getProperty("timelineColor", String.valueOf(new Color(140, 0, 0, 255).getRGB()))), true);
+            currentTimeColor = new Color(Integer.parseInt(properties.getProperty("currentTimeColor", String.valueOf(new Color(255, 0, 0, 255).getRGB()))), true);
 
             // Formatting for startOfDay
             startOfDay = LocalTime.parse(properties.getProperty("startOfDay", "06:00"));
@@ -173,7 +173,7 @@ public class TimeTrackerFrame extends JFrame {
             frameWidth = Integer.parseInt(properties.getProperty("frameWidth", "1200"));
             frameHeight = Integer.parseInt(properties.getProperty("frameHeight", "200"));
 
-            blockColor = new Color(Integer.parseInt(properties.getProperty("blockColor", String.valueOf(new Color(150, 150, 150, 128).getRGB()))), true);
+            blockColor = new Color(Integer.parseInt(properties.getProperty("blockColor", String.valueOf(new Color(255, 255, 255, 128).getRGB()))), true);
             blockHoverColor = new Color(Integer.parseInt(properties.getProperty("blockHoverColor", String.valueOf(new Color(34, 34, 139, 200).getRGB()))), true);
             blockBorderColor = new Color(Integer.parseInt(properties.getProperty("blockBorderColor", String.valueOf(Color.BLACK.getRGB()))), true);
 
