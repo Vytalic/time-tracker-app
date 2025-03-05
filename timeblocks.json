@@ -1,0 +1,37 @@
+[
+    {
+        "start": "06:00",
+        "end": "09:00",
+        "label": "Leetcode & DSA"
+    },
+    {
+        "start": "09:00",
+        "end": "12:00",
+        "label": "Real-World Project"
+    },
+    {
+        "start": "12:00",
+        "end": "15:00",
+        "label": "Classwork & Study"
+    },
+    {
+        "start": "15:00",
+        "end": "17:00",
+        "label": "Family & Workout"
+    },
+    {
+        "start": "17:00",
+        "end": "20:00",
+        "label": "Portfolio & Open Source"
+    },
+    {
+        "start": "20:00",
+        "end": "22:00",
+        "label": "Networking & Job Apps"
+    },
+    {
+        "start": "22:00",
+        "end": "23:59",
+        "label": "Wind Down & Sleep"
+    }
+]
