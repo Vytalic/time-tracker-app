@@ -2,7 +2,6 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,9 +9,10 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.ArrayList;
 import utils.TimeUtils;
+
+import java.util.Objects;
 import java.util.Properties;
 import java.nio.file.*;
-import com.google.gson.*;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,17 +21,10 @@ import java.io.File;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import utils.TimeUtils;
-import ui.TimeBlock;
-
-
 public class TimeTrackerFrame extends JFrame {
     private Point initialClick;
     private List<TimeBlock> schedule;
-    private ProgressBar progressBar;
+    private final ProgressBar progressBar;
     private Color fontColor;
     private Color progressBarColor;
     private Color timelineColor;
@@ -43,8 +36,6 @@ public class TimeTrackerFrame extends JFrame {
     private int frameWidth;
     private int frameHeight;
 
-    // Store time for the label in titlebar
-    private JLabel timeLabel;
 
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String TIMEBLOCKS_FILE = "timeblocks.json";
@@ -58,7 +49,7 @@ public class TimeTrackerFrame extends JFrame {
         setSize(frameWidth, frameHeight);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setUndecorated(true);
-        setAlwaysOnTop(true);
+        setAlwaysOnTop(false);
         setLayout(new BorderLayout());
 
         // Buttons panel
@@ -71,7 +62,7 @@ public class TimeTrackerFrame extends JFrame {
         leftPanel.setOpaque(false);
 
         // Menu button properties
-        JButton menuButton = new JButton("\u2630 Menu");
+        JButton menuButton = new JButton("☰ Menu");
         menuButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         menuButton.setFocusPainted(false);
         menuButton.setBorderPainted(false);
@@ -90,11 +81,25 @@ public class TimeTrackerFrame extends JFrame {
         centerPanel.add(timeLabel);
 
 
-        // Right panel for Minimize and Close Buttons
+        // Right panel for Pin, Minimize, and Close Buttons
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
         rightPanel.setOpaque(false);
-        JButton minimizeButton = createButton("-", 50, 30, Color.LIGHT_GRAY, e -> setState(JFrame.ICONIFIED));
+
+        // Declare pinButton & set properties
+        JButton pinButton = new JButton("Pin");
+        pinButton.setPreferredSize(new Dimension(80, 30));
+        pinButton.setBackground(Color.LIGHT_GRAY);
+
+        // Add action listener for pinButton
+        pinButton.addActionListener(e -> {
+            boolean isPinned = !isAlwaysOnTop();
+            setAlwaysOnTop(isPinned);
+            pinButton.setText(isPinned ? "Unpin" : "Pin");
+        });
+
+        JButton minimizeButton = createButton("-", 50, 30, Color.GRAY, e -> setState(JFrame.ICONIFIED));
         JButton closeButton = createButton("Close", 80, 30, Color.RED, e -> System.exit(0));
+        rightPanel.add(pinButton);
         rightPanel.add(minimizeButton);
         rightPanel.add(closeButton);
 
@@ -535,7 +540,7 @@ public class TimeTrackerFrame extends JFrame {
             startOfDayBox.addItem(String.format("%02d:00", hour));
         }
         startOfDayBox.setSelectedItem(startOfDay.toString()); // Load saved setting
-        startOfDayBox.addActionListener(e -> startOfDay = LocalTime.parse((String) startOfDayBox.getSelectedItem()));
+        startOfDayBox.addActionListener(e -> startOfDay = LocalTime.parse((String) Objects.requireNonNull(startOfDayBox.getSelectedItem())));
 
         // Save & Apply Button
         JButton applyButton = new JButton("Apply");
