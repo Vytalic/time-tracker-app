@@ -40,6 +40,10 @@ public class TimeTrackerFrame extends JFrame {
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String TIMEBLOCKS_FILE = "timeblocks.json";
 
+    private final JLabel blockLabel;
+    private final JLabel timeLeftLabel;
+
+
     public TimeTrackerFrame() {
         // Load settings and schedule.
         loadSettings();
@@ -72,13 +76,37 @@ public class TimeTrackerFrame extends JFrame {
         menuButton.addActionListener(e -> showMenu(menuButton));
         leftPanel.add(menuButton);
 
-        // Center panel for Time Label
-        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        /// Center panel for Time Label, Current Block Label, and Time Left
+        JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+
+// Time label (Left-aligned)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0; // Allows stretching
+        gbc.anchor = GridBagConstraints.WEST; // Left-align
         JLabel timeLabel = new JLabel();
         timeLabel.setForeground(Color.WHITE);
         timeLabel.setFont(new Font("Arial", Font.BOLD, 28));
-        centerPanel.add(timeLabel);
+        centerPanel.add(timeLabel, gbc);
+
+// Current block label (Center-aligned)
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.CENTER; // Center-align
+        blockLabel = new JLabel("No active block");
+        blockLabel.setForeground(Color.WHITE);
+        blockLabel.setFont(new Font("Arial", Font.BOLD, 28));
+        centerPanel.add(blockLabel, gbc);
+
+// Time Left label (Right-aligned)
+        gbc.gridx = 2;
+        gbc.anchor = GridBagConstraints.EAST; // Right-align
+        timeLeftLabel = new JLabel("");
+        timeLeftLabel.setForeground(Color.WHITE);
+        timeLeftLabel.setFont(new Font("Arial", Font.BOLD, 28));
+        centerPanel.add(timeLeftLabel, gbc);
+
 
 
         // Right panel for Pin, Minimize, and Close Buttons
@@ -123,10 +151,15 @@ public class TimeTrackerFrame extends JFrame {
         );
         add(progressBar, BorderLayout.CENTER);
 
-        // Automatically update the title every minute.
-        Timer timer = new Timer(60000, e -> updateTimeLabel(timeLabel));
+        // Automatically update the title, block label, and eta every minute.
+        Timer timer = new Timer(60000, e -> {
+            updateTimeLabel(timeLabel);
+            updateCurrentBlockInfo();
+        });
         timer.start();
         updateTimeLabel(timeLabel);
+        updateCurrentBlockInfo();
+
 
         enableDragging();
         setVisible(true);
@@ -154,6 +187,19 @@ public class TimeTrackerFrame extends JFrame {
         // Show below the Menu button
         menu.show(menuButton, 0, menuButton.getHeight());
     }
+
+    private void updateCurrentBlockInfo() {
+        TimeBlock currentBlock = progressBar.getCurrentTimeBlock();
+
+        if (currentBlock != null) {
+            blockLabel.setText("" + currentBlock.label);
+            timeLeftLabel.setText(progressBar.getTimeRemaining(currentBlock));
+        } else {
+            blockLabel.setText("No active block");
+            timeLeftLabel.setText("");
+        }
+    }
+
 
     // Loads settings from file
     private void loadSettings() {
