@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
-    implementation("org.json:json:20210307")
+    implementation("org.json:json:20231013")
 }
 
 application {
