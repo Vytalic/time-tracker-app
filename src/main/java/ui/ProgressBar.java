@@ -188,6 +188,11 @@ public class ProgressBar extends JPanel {
             }
         }
 
+        // Draw the current time indicator
+        g.setColor(currentTimeColor);
+        g.fillRect(currentX - 1, VERTICAL_PADDING - 10, 2, panelHeight);  // (x-position, y-position, thickness, height)
+
+
         // Draw the hovered block LAST so it's on top
         if (hoveredBlock != null) {
             int xStart = PADDING + getXForTime(hoveredBlock.start);
@@ -203,8 +208,9 @@ public class ProgressBar extends JPanel {
             g.fillRect(xStart, 20, blockWidth, barHeight); // Shadow 5px below the block
 
             // Pop-out effect (Draw the actual hovered block)
-            g.setColor(new Color(34, 34, 139, 200));
+            g.setColor(blockHoverColor);
             g.fillRect(xStart + 5, 10, blockWidth, barHeight);
+
             g.setColor(blockBorderColor);
             g.drawRect(xStart + 5, 10, blockWidth, barHeight - 1);
 
@@ -222,9 +228,6 @@ public class ProgressBar extends JPanel {
         }
 
 
-        // Draw the current time indicator
-        g.setColor(currentTimeColor);
-        g.fillRect(currentX - 1, VERTICAL_PADDING - 10, 2, panelHeight);  // (x-position, y-position, thickness, height)
 
     }
 

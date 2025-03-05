@@ -17,7 +17,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FileWriter;
-
+import java.io.File;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -128,12 +130,19 @@ public class TimeTrackerFrame extends JFrame {
     private void showMenu(JButton menuButton) {
         JPopupMenu menu = new JPopupMenu();
 
+        // First entry in menu
+        JMenuItem schedule = new JMenuItem("Edit Schedule");
+        schedule.addActionListener(e -> openScheduleDialog());
+
+        // Second entry in menu
         JMenuItem changeSize = new JMenuItem("Change Size");
         changeSize.addActionListener(e -> openSizeDialog());
 
+        // Third entry in menu
         JMenuItem settings = new JMenuItem("Settings");
         settings.addActionListener(e -> openSettingsDialog());
 
+        menu.add(schedule);
         menu.add(changeSize);
         menu.add(settings);
 
@@ -209,6 +218,123 @@ public class TimeTrackerFrame extends JFrame {
         }
     }
 
+    private void addNewTimeBlock(DefaultListModel<TimeBlock> listModel) {
+        JTextField startTimeField = new JTextField(5);
+        JTextField endTimeField = new JTextField(5);
+        JTextField labelField = new JTextField(10);
+
+        JPanel panel = new JPanel(new GridLayout(3, 2));
+        panel.add(new JLabel("Start Time (HH:mm):"));
+        panel.add(startTimeField);
+        panel.add(new JLabel("End Time (HH:mm):"));
+        panel.add(endTimeField);
+        panel.add(new JLabel("Label:"));
+        panel.add(labelField);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Add Time Block", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                LocalTime start = LocalTime.parse(startTimeField.getText().trim());
+                LocalTime end = LocalTime.parse(endTimeField.getText().trim());
+                String label = labelField.getText().trim();
+
+                if (label.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Label cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                TimeBlock newBlock = new TimeBlock(start, end, label);
+                schedule.add(newBlock);
+                listModel.addElement(newBlock);
+
+                saveTimeBlocks();
+                progressBar.repaint();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Invalid time format! Use HH:mm.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+
+    private void openScheduleDialog() {
+        setAlwaysOnTop(false);
+
+        JFrame scheduleFrame = new JFrame("Manage Schedule");
+        scheduleFrame.setSize(450, 450);
+        scheduleFrame.setLayout(new BorderLayout());
+        scheduleFrame.setAlwaysOnTop(true);
+        scheduleFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Panel to display existing time blocks
+        DefaultListModel<TimeBlock> listModel = new DefaultListModel<>();
+        JList<TimeBlock> timeBlockList = new JList<>(listModel);
+        timeBlockList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        for (TimeBlock block : schedule) {
+            listModel.addElement(block);
+        }
+
+        JScrollPane scrollPane = new JScrollPane(timeBlockList);
+        scheduleFrame.add(scrollPane, BorderLayout.CENTER);
+
+        // Buttons for Adding and Deleting
+        JButton addButton = new JButton("Add Time Block");
+        JButton editButton = new JButton("Edit");
+        JButton deleteButton = new JButton("Delete Selected");
+        JButton saveButton = new JButton("Save");
+
+        // Add new time block
+        addButton.addActionListener(e -> addNewTimeBlock(listModel));
+
+        // Edit selected time block
+        editButton.addActionListener(e -> {
+            TimeBlock selectedBlock = timeBlockList.getSelectedValue();
+            if (selectedBlock != null) {
+                editTimeBlock(selectedBlock, listModel);
+            } else {
+                JOptionPane.showMessageDialog(scheduleFrame, "Please select a time block to edit.", "No Selection", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        // Delete selected time block
+        deleteButton.addActionListener(e -> {
+            TimeBlock selectedBlock = timeBlockList.getSelectedValue();
+            if (selectedBlock != null) {
+                schedule.remove(selectedBlock);
+                listModel.removeElement(selectedBlock);
+                saveTimeBlocks();
+                progressBar.repaint();
+            }
+        });
+
+        saveButton.addActionListener(e -> {
+            saveTimeBlocks();
+            progressBar.repaint();
+            JOptionPane.showMessageDialog(scheduleFrame, "Schedule saved successfully.", "Saved", JOptionPane.INFORMATION_MESSAGE);
+            scheduleFrame.dispose();
+        });
+
+
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(addButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(saveButton);
+
+        scheduleFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Restore "Always on Top" when closed
+        scheduleFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                setAlwaysOnTop(true);
+            }
+        });
+
+        scheduleFrame.setVisible(true);
+    }
+
     // Open the Change Size Dialog
     private void openSizeDialog() {
         JTextField widthField = new JTextField(String.valueOf(frameWidth), 5);
@@ -240,26 +366,112 @@ public class TimeTrackerFrame extends JFrame {
         }
     }
 
-    // Load time blocks from file
-    private void loadTimeBlocks() {
-        try {
-            String json = Files.readString(Paths.get(TIMEBLOCKS_FILE));
-            TimeBlock[] blocks = new Gson().fromJson(json, TimeBlock[].class);
-            schedule = new ArrayList<>(List.of(blocks));
-        } catch (IOException e) {
-            System.out.println("No previous time blocks found, using defaults.");
-            schedule = new ArrayList<>(TimeUtils.getDefaultSchedule());
+    private void editTimeBlock(TimeBlock block, DefaultListModel<TimeBlock> listModel) {
+        JTextField startTimeField = new JTextField(block.start.toString(), 5);
+        JTextField endTimeField = new JTextField(block.end.toString(), 5);
+        JTextField labelField = new JTextField(block.label, 10);
+
+        JPanel panel = new JPanel(new GridLayout(3, 2));
+        panel.add(new JLabel("Start Time (HH:mm):"));
+        panel.add(startTimeField);
+        panel.add(new JLabel("End Time (HH:mm):"));
+        panel.add(endTimeField);
+        panel.add(new JLabel("Label:"));
+        panel.add(labelField);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Edit Time Block", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                LocalTime newStart = LocalTime.parse(startTimeField.getText().trim());
+                LocalTime newEnd = LocalTime.parse(endTimeField.getText().trim());
+                String newLabel = labelField.getText().trim();
+
+                if (newLabel.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Label cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Update the block
+                block.start = newStart;
+                block.end = newEnd;
+                block.label = newLabel;
+
+                // Refresh the list
+                listModel.setElementAt(block, listModel.indexOf(block));
+
+                // Save updates
+                saveTimeBlocks();
+                progressBar.repaint();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Invalid time format! Use HH:mm.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
-    // Save time blocks to file
-    private void saveTimeBlocks() {
-        try (FileWriter writer = new FileWriter(TIMEBLOCKS_FILE)) {
-            new Gson().toJson(schedule, writer);
+
+    // Load time blocks from file
+    private void loadTimeBlocks() {
+        schedule = new ArrayList<>();
+        File file = new File(TIMEBLOCKS_FILE);
+
+        // If the file doesn't exist or is empty, create a default schedule
+        if (!file.exists() || file.length() == 0) {
+            System.out.println("No valid time blocks found, creating defaults.");
+            schedule = TimeUtils.getDefaultSchedule();
+            return;
+        }
+
+        try {
+            String json = new String(Files.readAllBytes(Paths.get(TIMEBLOCKS_FILE))).trim();
+
+            // Check if JSON is empty
+            if (json.isEmpty() || json.equals("null")) {
+                System.out.println("Empty JSON file, creating default schedule.");
+                schedule = TimeUtils.getDefaultSchedule();
+                return;
+            }
+
+            JSONArray jsonArray = new JSONArray(json);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject obj = jsonArray.getJSONObject(i);
+                LocalTime start = LocalTime.parse(obj.getString("start"));
+                LocalTime end = LocalTime.parse(obj.getString("end"));
+                String label = obj.getString("label");
+
+                schedule.add(new TimeBlock(start, end, label));
+            }
         } catch (IOException e) {
+            System.out.println("Error reading timeblocks.json, using defaults.");
+            schedule = TimeUtils.getDefaultSchedule();
+        } catch (Exception e) {
+            System.out.println("Corrupt JSON detected. Resetting to default.");
             e.printStackTrace();
+            schedule = TimeUtils.getDefaultSchedule();
         }
     }
+
+
+
+    private void saveTimeBlocks() {
+        JSONArray jsonArray = new JSONArray();
+
+        for (TimeBlock block : schedule) {
+            JSONObject obj = new JSONObject();
+            obj.put("start", block.start.toString());
+            obj.put("end", block.end.toString());
+            obj.put("label", block.label);
+            jsonArray.put(obj);
+        }
+
+        try (FileWriter file = new FileWriter(TIMEBLOCKS_FILE, false)) {
+            file.write(jsonArray.toString(4));
+            file.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error saving schedule!", "Save Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
 
     private JButton createButton(String text, int width, int height, Color color, ActionListener action) {
         JButton button = new JButton(text);
@@ -294,22 +506,28 @@ public class TimeTrackerFrame extends JFrame {
     }
 
     private void openSettingsDialog() {
+        // Prevent JFrame from staying on top of new dialog boxes
+        setAlwaysOnTop(false);
+
         JFrame settingsFrame = new JFrame("Settings");
         settingsFrame.setSize(400, 300);
         settingsFrame.setLayout(new GridLayout(6, 2));
         getContentPane().setBackground(new Color(211, 211, 211)); // Light Gray background
         settingsFrame.setAlwaysOnTop(true);
+        settingsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Color Pickers
         JButton fontColorButton = new JButton("Font Color");
         JButton progressBarColorButton = new JButton("Progress Bar Color");
         JButton timelineColorButton = new JButton("Timeline Color");
         JButton currentTimeColorButton = new JButton("Current Time Color");
+        JButton blockHoverColorButton = new JButton("Block Hover Color");
 
         fontColorButton.addActionListener(e -> fontColor = JColorChooser.showDialog(null, "Choose Font Color", fontColor));
         progressBarColorButton.addActionListener(e -> progressBarColor = JColorChooser.showDialog(null, "Choose Progress Bar Color", progressBarColor));
         timelineColorButton.addActionListener(e -> timelineColor = JColorChooser.showDialog(null, "Choose Timeline Color", timelineColor));
         currentTimeColorButton.addActionListener(e -> currentTimeColor = JColorChooser.showDialog(null, "Choose Current Time Color", currentTimeColor));
+        blockHoverColorButton.addActionListener(e -> blockHoverColor = JColorChooser.showDialog(null, "Choose Block Hover Color", blockHoverColor));
 
         // Start of Day Selection
         JComboBox<String> startOfDayBox = new JComboBox<>();
@@ -328,6 +546,23 @@ public class TimeTrackerFrame extends JFrame {
             settingsFrame.dispose();
         });
 
+        // Reset Button (Deletes settings file and reloads defaults)
+        JButton resetButton = new JButton("Reset to Default");
+        resetButton.setBackground(Color.RED);
+        resetButton.setForeground(Color.WHITE);
+        resetButton.setOpaque(true);
+        resetButton.setFont(new Font("Arial", Font.BOLD, 12));
+
+        resetButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to reset all settings to default?",
+                    "Reset Confirmation", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                resetSettings();
+                settingsFrame.dispose();
+            }
+        });
+
+
         // Add components
         settingsFrame.add(new JLabel("Select Start of Day:"));
         settingsFrame.add(startOfDayBox);
@@ -335,11 +570,42 @@ public class TimeTrackerFrame extends JFrame {
         settingsFrame.add(progressBarColorButton);
         settingsFrame.add(timelineColorButton);
         settingsFrame.add(currentTimeColorButton);
+        settingsFrame.add(blockHoverColorButton);
         settingsFrame.add(new JLabel()); // Spacer
         settingsFrame.add(applyButton);
+        settingsFrame.add(resetButton);
+
+        // Re-enable Always on top when settings closes
+        settingsFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                setAlwaysOnTop(true);
+            }
+        });
 
         settingsFrame.setVisible(true);
     }
+
+    private void resetSettings() {
+        // Delete the settings file
+        try {
+            Files.deleteIfExists(Paths.get(SETTINGS_FILE));
+            JOptionPane.showMessageDialog(null, "Settings reset to default. Restarting the application.",
+                    "Reset Successful", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Failed to reset settings!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Reload default settings
+        loadSettings();
+        progressBar.updateSettings(fontColor, progressBarColor, timelineColor, currentTimeColor, startOfDay,
+                blockColor, blockHoverColor, blockBorderColor);
+
+        // Repaint UI to reflect default settings
+        progressBar.repaint();
+    }
+
 
     private void updateTimeLabel(JLabel timeLabel) {
         String currentTime = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("hh:mm a"));

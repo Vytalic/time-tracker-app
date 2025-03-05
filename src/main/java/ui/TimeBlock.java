@@ -12,4 +12,9 @@ public class TimeBlock {
         this.end = end;
         this.label = label;
     }
+
+    @Override
+    public String toString() {
+        return start + " - " + end + " (" + label + ")";
+    }
 }

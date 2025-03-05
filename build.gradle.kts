@@ -15,8 +15,7 @@ repositories {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
-    implementation("libs.guava")
-    implementation("libs.junit")
+    implementation("org.json:json:20210307")
 }
 
 application {
@@ -27,4 +26,11 @@ tasks.jar {
     manifest {
         attributes["Main-Class"] = "Main"
     }
+
+    // Include all dependencies inside the JAR (Fat JAR)
+    from ({
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    })
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
