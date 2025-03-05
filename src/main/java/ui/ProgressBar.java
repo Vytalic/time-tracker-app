@@ -10,13 +10,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 
-import ui.TimeTrackerFrame;
-
 public class ProgressBar extends JPanel {
     private static final int TOTAL_MINUTES = 1440;
-    private List<TimeBlock> timeBlocks;
+    private final List<TimeBlock> timeBlocks;
     private LocalTime startOfDay;
-    private Color fontColor;
     private Color progressFillColor;
     private Color timelineColor;
     private Color currentTimeColor;
@@ -25,10 +22,10 @@ public class ProgressBar extends JPanel {
     private Color blockBorderColor;
     private TimeBlock hoveredBlock = null;
 
-    private Font timelineFont = new Font("Arial", Font.BOLD, 14);
-    private Font blockFont = new Font("Arial", Font.BOLD, 14);
+    private final Font timelineFont = new Font("Arial", Font.BOLD, 14);
+    private final Font blockFont = new Font("Arial", Font.BOLD, 14);
 
-    private static final int PADDING = 20;
+    private static final int PADDING = 30;
     private static final int VERTICAL_PADDING = 20;
 
     public ProgressBar(List<TimeBlock> timeBlocks,
@@ -41,7 +38,7 @@ public class ProgressBar extends JPanel {
                        Color blockBorderColor) {
         this.timeBlocks = timeBlocks;
         this.startOfDay = startOfDay;
-        this.fontColor = fontColor;
+        //        this.fontColor = fontColor; may not be needed
         this.progressFillColor = progressFillColor;
         this.timelineColor = timelineColor;
         this.currentTimeColor = currentTimeColor;
@@ -121,9 +118,9 @@ public class ProgressBar extends JPanel {
         for (int hour = 0; hour <= 24; hour++) {
             LocalTime tickTime = startOfDay.plusHours(hour);
             int x = PADDING + (int) ((hour / 24.0) * (getWidth() - 2 * PADDING));
-            g.drawLine(x, barHeight + VERTICAL_PADDING, x, barHeight + VERTICAL_PADDING + 5);
+            g.drawLine(x, barHeight + VERTICAL_PADDING - 3, x, barHeight + VERTICAL_PADDING + 7);
             String tickLabel = tickTime.format(java.time.format.DateTimeFormatter.ofPattern("ha"));
-            g.drawString(tickLabel, x - 10, panelHeight + VERTICAL_PADDING - 3);
+            g.drawString(tickLabel, x - 10, panelHeight + VERTICAL_PADDING + 3);
         }
 
         // Draw the time blocks (skip hovered block)
@@ -133,8 +130,8 @@ public class ProgressBar extends JPanel {
                 continue;
             }
 
-            int xStart = getXForTime(block.start) + PADDING;
-            int xEnd = getXForTime(block.end) + PADDING;
+            int xStart = PADDING + getXForTime(block.start);
+            int xEnd = PADDING + getXForTime(block.end);
             xEnd = Math.min(xEnd, getWidth() - PADDING);
 
             int blockWidth = xEnd - xStart;
@@ -158,11 +155,11 @@ public class ProgressBar extends JPanel {
 
             // Draw the transparent block
             g.setColor(fadedBlockColor);
-            g.fillRect(xStart, PADDING, blockWidth, barHeight);
+            g.fillRect(xStart, VERTICAL_PADDING, blockWidth, barHeight);
 
             // Draw the block border
             g.setColor(blockBorderColor);
-            g.drawRect(xStart, PADDING, blockWidth - 1, barHeight - 1);
+            g.drawRect(xStart, VERTICAL_PADDING, blockWidth, barHeight);
 
             // Draw the transparent text
             String label = block.label;
@@ -188,9 +185,9 @@ public class ProgressBar extends JPanel {
             }
         }
 
-        // Draw the current time indicator
+        // Draw the current time indicator (the red vertical line)
         g.setColor(currentTimeColor);
-        g.fillRect(currentX - 1, VERTICAL_PADDING - 10, 2, panelHeight);  // (x-position, y-position, thickness, height)
+        g.fillRect(currentX - 1, VERTICAL_PADDING, 2, panelHeight);  // (x-position, y-position, thickness, height)
 
 
         // Draw the hovered block LAST so it's on top
@@ -279,7 +276,6 @@ public class ProgressBar extends JPanel {
     public void updateSettings(Color fontColor, Color progressFillColor, Color timelineColor,
                                Color currentTimeColor, LocalTime startOfDay,
                                Color blockColor, Color blockHoverColor, Color blockBorderColor) {
-        this.fontColor = fontColor;
         this.progressFillColor = progressFillColor;
         this.timelineColor = timelineColor;
         this.currentTimeColor = currentTimeColor;
