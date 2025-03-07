@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.ArrayList;
 import utils.TimeUtils;
+import utils.StartupManager;
 
 import java.util.Objects;
 import java.util.Properties;
@@ -561,11 +562,17 @@ public class TimeTrackerFrame extends JFrame {
         setAlwaysOnTop(false);
 
         JFrame settingsFrame = new JFrame("Settings");
-        settingsFrame.setSize(400, 300);
-        settingsFrame.setLayout(new GridLayout(6, 2));
+        settingsFrame.setSize(400, 350);
+        settingsFrame.setLayout(new GridLayout(7, 2)); // Increased rows to fit the new checkbox
         getContentPane().setBackground(new Color(211, 211, 211)); // Light Gray background
         settingsFrame.setAlwaysOnTop(true);
         settingsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Load current startup setting
+        boolean isStartupEnabled = StartupManager.loadStartupPreference();
+
+        // Create Startup Checkbox
+        JCheckBox startupCheckbox = new JCheckBox("Run on Startup", isStartupEnabled);
 
         // Color Pickers
         JButton fontColorButton = new JButton("Font Color");
@@ -585,7 +592,7 @@ public class TimeTrackerFrame extends JFrame {
         for (int hour = 0; hour < 24; hour++) {
             startOfDayBox.addItem(String.format("%02d:00", hour));
         }
-        startOfDayBox.setSelectedItem(startOfDay.toString()); // Load saved setting
+        startOfDayBox.setSelectedItem(startOfDay.toString());
         startOfDayBox.addActionListener(e -> startOfDay = LocalTime.parse((String) Objects.requireNonNull(startOfDayBox.getSelectedItem())));
 
         // Save & Apply Button
@@ -594,6 +601,18 @@ public class TimeTrackerFrame extends JFrame {
             progressBar.updateSettings(fontColor, progressBarColor, timelineColor, currentTimeColor, startOfDay,
                     blockColor, blockHoverColor, blockBorderColor);
             saveSettings();
+
+            // Save startup preference
+            boolean enableStartup = startupCheckbox.isSelected();
+            StartupManager.saveStartupPreference(enableStartup);
+
+            // Apply startup setting
+            if (enableStartup) {
+                StartupManager.addToStartup();
+            } else {
+                StartupManager.removeFromStartup();
+            }
+
             settingsFrame.dispose();
         });
 
@@ -613,7 +632,6 @@ public class TimeTrackerFrame extends JFrame {
             }
         });
 
-
         // Add components
         settingsFrame.add(new JLabel("Select Start of Day:"));
         settingsFrame.add(startOfDayBox);
@@ -622,7 +640,7 @@ public class TimeTrackerFrame extends JFrame {
         settingsFrame.add(timelineColorButton);
         settingsFrame.add(currentTimeColorButton);
         settingsFrame.add(blockHoverColorButton);
-        settingsFrame.add(new JLabel()); // Spacer
+        settingsFrame.add(startupCheckbox);
         settingsFrame.add(applyButton);
         settingsFrame.add(resetButton);
 
@@ -636,6 +654,7 @@ public class TimeTrackerFrame extends JFrame {
 
         settingsFrame.setVisible(true);
     }
+
 
     private void resetSettings() {
         // Delete the settings file
