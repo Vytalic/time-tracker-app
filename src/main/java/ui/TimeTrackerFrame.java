@@ -563,8 +563,8 @@ public class TimeTrackerFrame extends JFrame {
 
         JFrame settingsFrame = new JFrame("Settings");
         settingsFrame.setSize(400, 350);
-        settingsFrame.setLayout(new GridLayout(7, 2)); // Increased rows to fit the new checkbox
-        getContentPane().setBackground(new Color(211, 211, 211)); // Light Gray background
+        settingsFrame.setLayout(new GridLayout(7, 2));
+        getContentPane().setBackground(new Color(211, 211, 211));
         settingsFrame.setAlwaysOnTop(true);
         settingsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -573,6 +573,7 @@ public class TimeTrackerFrame extends JFrame {
 
         // Create Startup Checkbox
         JCheckBox startupCheckbox = new JCheckBox("Run on Startup", isStartupEnabled);
+        startupCheckbox.setSelected(isStartupEnabled);
 
         // Color Pickers
         JButton fontColorButton = new JButton("Font Color");
